@@ -70,25 +70,49 @@ class NGram():
 def split(X, Y):
     idx = [i for i in range(0, X.shape[0])]
     random.shuffle(idx)
-    train_len = int(0.6 * len(idx))
-    test_len, dev_len = int(0.2 * len(idx)), int(0.2 * len(idx))
-    return X[idx[:train_len]], X[idx[train_len: train_len + test_len]], X[idx[train_len + test_len + dev_len:]], Y[idx[:train_len]], Y[idx[train_len: train_len + test_len]], Y[idx[train_len + test_len + dev_len:]]
+    train_len = int(0.8 * len(idx))
+    test_len, dev_len = int(0.1 * len(idx)), int(0.1 * len(idx))
+    return X[idx[:train_len]], Y[idx[:train_len]], \
+           X[idx[train_len: train_len + test_len]], Y[idx[train_len: train_len + test_len]], \
+           X[idx[train_len + test_len:]], Y[idx[train_len + test_len:]]
+
+# TODO: mini-batch
+def mini_batch(data):
+    pass
 
 if __name__ == '__main__':
     data = pd.read_csv('train.tsv', sep='\t')
     n = len(data)
     print("col of data is %d" % len(data))
-    
-    # Bag of Words method
-    # bow = BoW()
-    # X = bow.get_data(data['Phrase'])
 
+    # Bag of Words method
+    bow = BoW()
+    X = bow.get_data(data['Phrase'])
     # N-gram method
-    ngram = NGram(3)
-    X = ngram.get_data(data['Phrase'])
-    
-    Y = data['Sentiment']
+    # ngram = NGram(3)
+    # X = ngram.get_data(data['Phrase'])
+    Y = data['Sentiment'].values
+
+    features = X.shape[1]
     classes = len(np.unique(Y))
-    print(X.shape[0], X.shape[1], len(Y), classes)
-    train_X, test_X, dev_X, train_Y, test_Y, dev_Y = split(X, Y)
-    model = SoftmaxRegression(X.shape[1], classes)        
+    print("Features = {}, Classes = {}".format(features, classes))
+    train_X, train_Y, test_X, test_Y, dev_X, dev_Y = split(X, Y)
+
+    model = SoftmaxRegression(features, classes, alpha=0.1)
+    loss = []
+    epochs = 50
+    for epoch in range(1, epochs + 1):
+        Loss = 0
+        label = 0
+        batch_size = 1024
+        while label < train_X.shape[0]:
+            end = min(label + batch_size, train_X.shape[0])
+            Loss += model.fit(train_X[label: end], train_Y[label: end])
+            label += batch_size
+        loss.append(Loss)
+        pred_Y = model.predict(test_X)
+        print(pred_Y, test_Y)
+        input()
+        acc = (pred_Y == test_Y).sum()
+        total = len(test_Y)
+        print("Epoch [{}/{}]: Loss: {:.4f} Acc: {:.4f}".format(epoch, epochs, Loss, acc / total))

@@ -4,6 +4,7 @@ from scipy.sparse import csr_matrix
 from collections import Counter
 import random
 from softmax_regression import SoftmaxRegression
+from tqdm import tqdm, trange
 
 class BoW():
     def __init__(self):
@@ -76,9 +77,17 @@ def split(X, Y):
            X[idx[train_len: train_len + test_len]], Y[idx[train_len: train_len + test_len]], \
            X[idx[train_len + test_len:]], Y[idx[train_len + test_len:]]
 
-# TODO: mini-batch
-def mini_batch(data):
-    pass
+def mini_batches(data_X, data_Y, batch_size):
+    m = data_X.shape[0]
+    idx = np.arange(0, m, 1)
+    np.random.shuffle(idx)
+    rd = m // batch_size + (m % batch_size != 0)
+    mini_batches = []
+    for i in range(rd):
+        end = min((i + 1) * batch_size, m)
+        mini_batch = (data_X[idx[i * batch_size: end]], data_Y[idx[i * batch_size: end]])
+        mini_batches.append(mini_batch)
+    return mini_batches
 
 if __name__ == '__main__':
     data = pd.read_csv('train.tsv', sep='\t')
@@ -98,21 +107,21 @@ if __name__ == '__main__':
     print("Features = {}, Classes = {}".format(features, classes))
     train_X, train_Y, test_X, test_Y, dev_X, dev_Y = split(X, Y)
 
-    model = SoftmaxRegression(features, classes, alpha=0.1)
+    model = SoftmaxRegression(features, classes, alpha=0.1, l2=0.8)
     loss = []
-    epochs = 50
-    for epoch in range(1, epochs + 1):
+    epochs = 100
+    tqdm_method = trange(100)
+    for epoch in tqdm_method:
+        tqdm_method.set_description("Epoch [{}/{}]".format(epoch + 1, epochs))
         Loss = 0
-        label = 0
-        batch_size = 1024
-        while label < train_X.shape[0]:
-            end = min(label + batch_size, train_X.shape[0])
-            Loss += model.fit(train_X[label: end], train_Y[label: end])
-            label += batch_size
+        for batch in mini_batches(train_X, train_Y, 256): # SGD: set batch_size = 1
+            x, y = batch
+            Loss += model.fit(x, y)
         loss.append(Loss)
         pred_Y = model.predict(test_X)
-        print(pred_Y, test_Y)
-        input()
         acc = (pred_Y == test_Y).sum()
         total = len(test_Y)
-        print("Epoch [{}/{}]: Loss: {:.4f} Acc: {:.4f}".format(epoch, epochs, Loss, acc / total))
+        Acc = acc / total
+        tqdm_method.set_postfix_str("Loss: {:.4f} Acc: {:.4f}".format(Loss, acc / total))
+    
+    # TODO: use Dev to optimize hyperparameters

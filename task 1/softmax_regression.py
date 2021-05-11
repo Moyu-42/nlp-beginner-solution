@@ -30,18 +30,17 @@ class SoftmaxRegression():
         loss = -1.0 / m * np.sum(train_Y * np.log(y_hat))
         dW = -1.0 / m * train_X.transpose().dot(train_Y - y_hat)
 
-        # TODO: regularization
         if self.l1:
             loss += self.l1 / (2 * m) * np.sum(self.W)
-            dW += self.l1
+            dW += self.l1 / (2 * m) * np.sign(self.W)
         elif self.l2:
-            loss += self.l2 / (2 * m) * np.sum(self.W) ** 2
+            loss += self.l2 / (2 * m) * np.sum(np.square(self.W))
             dW += self.l2 / m * self.W
         self.W = self.W - self.alpha * dW
         return loss
     
     def predict(self, data_X):
-        y_pred = np.argmax(data_X.dot(self.W), axis=1).reshape(-1, 1)
+        y_pred = np.argmax(data_X.dot(self.W), axis=1)
         return y_pred
 
 
@@ -55,11 +54,11 @@ if __name__ == '__main__':
     test_Y = y[20: ]
 
     loss = []
-    epochs = 10000
+    epochs = 100
     for epoch in range(epochs + 1):
         Loss = model.fit(train_X, train_Y)
         loss.append(Loss)
-        pred_Y = model.predict(test_X)
+        pred_Y = model.predict(test_X).reshape(-1, 1)
         acc = (pred_Y == test_Y).sum() / len(test_Y)
         print("Epoch [{}/{}] Loss: {:.4f} Acc: {:.4f}".format(epoch, epochs, Loss, acc))
 

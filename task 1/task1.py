@@ -19,6 +19,8 @@ class BoW():
             bag_of_words = self.tokenizer(row)
             vocab.update(bag_of_words)
         self.tok2id = dict([(k, v) for v, k in enumerate(vocab)])
+    
+    def fit(self, datas):
         # transfer to csr_matrix
         indptr = [0]
         indices = []
@@ -27,6 +29,8 @@ class BoW():
             token = self.tokenizer(row)
             ct = Counter(token)
             for k, val in ct.items():
+                if k not in self.tok2id:
+                    continue
                 indices.append(self.tok2id[k])
                 data.append(val)
             indptr.append(len(indices))
@@ -54,6 +58,8 @@ class NGram():
             n_gram = self.get_ngrams(token)
             vocab.update(n_gram)
         self.tok2id = dict([(k, v) for v, k in enumerate(vocab)])
+    
+    def fit(self, datas):
         # transfer to csr_matrix
         indptr = [0]
         indices = []
@@ -90,13 +96,14 @@ def mini_batches(data_X, data_Y, batch_size):
     return mini_batches
 
 if __name__ == '__main__':
-    data = pd.read_csv('train.tsv', sep='\t')
+    data = pd.read_csv('../data/train.tsv', sep='\t')
     n = len(data)
     print("col of data is %d" % len(data))
 
     # Bag of Words method
     bow = BoW()
-    X = bow.get_data(data['Phrase'])
+    bow.get_data(data['Phrase'])
+    X = bow.fit(data['Phrase'])
     # N-gram method
     # ngram = NGram(3)
     # X = ngram.get_data(data['Phrase'])
@@ -107,10 +114,10 @@ if __name__ == '__main__':
     print("Features = {}, Classes = {}".format(features, classes))
     train_X, train_Y, test_X, test_Y, dev_X, dev_Y = split(X, Y)
 
-    model = SoftmaxRegression(features, classes, alpha=0.1, l2=0.8)
+    model = SoftmaxRegression(features, classes, alpha=0.01)
     loss = []
-    epochs = 100
-    tqdm_method = trange(100)
+    epochs = 2000
+    tqdm_method = trange(epochs)
     for epoch in tqdm_method:
         tqdm_method.set_description("Epoch [{}/{}]".format(epoch + 1, epochs))
         Loss = 0
@@ -125,3 +132,10 @@ if __name__ == '__main__':
         tqdm_method.set_postfix_str("Loss: {:.4f} Acc: {:.4f}".format(Loss, acc / total))
     
     # TODO: use Dev to optimize hyperparameters
+
+    test_data = pd.read_csv('../data/test.tsv', sep='\t')
+    test_data_X = bow.fit(test_data['Phrase'])
+    pred_Y = model.predict(test_data_X)
+
+    ans = pd.DataFrame({'PhraseId': test_data['PhraseId'].values, 'Sentiment': pred_Y})
+    ans.to_csv('task1.csv', index=False)

@@ -15,7 +15,6 @@ def build_vocab(data):
     
     word2id = {word: i for i, word in enumerate(wlist)}
     id2word = {i: word for i, word in enumerate(wlist)}
-
     return word2id, id2word
 
 def get_id(data, word2id, id2word):
@@ -27,7 +26,22 @@ def get_id(data, word2id, id2word):
     return torch.LongTensor(pad_ids)
 
 def word2vec(vocab, dim):
-    pass
+    word_vec = xavier_uniform_(torch.empty(len(vocab), dim))
+    num_of_word = 0
+    with open("../data/glove.6B.50d.txt", encoding='utf-8') as f:
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            line = line.split(' ', 1)
+            word = line[0]
+            vec = line[1].strip('\n').split(' ')
+            if word in vocab:
+                num_of_word += 1
+                word_vec[vocab[word]] = torch.tensor(list(map(lambda x: float(x), vec)))
+            if num_of_word == len(vocab) - 1:
+                break
+    return word_vec
 
 def split(X, Y):
     idx = [i for i in range(0, X.shape[0])]
@@ -38,12 +52,11 @@ def split(X, Y):
            X[idx[train_len: train_len + test_len]], Y[idx[train_len: train_len + test_len]], \
            X[idx[train_len + test_len:]], Y[idx[train_len + test_len:]]
 
-def make_data(X, Y):
+def make_data(X):
     word2id, id2word = build_vocab(X)
     X = get_id(X, word2id, id2word)
-    print(X.shape)
-    vec = word2vec(word2id, X.shape[1])
-    return split(X, Y), vec
+    vec = word2vec(word2id, 50)
+    return X, vec, word2id, id2word
 
 class MyDataSet(Data.Dataset):
     def __init__(self, X, Y):

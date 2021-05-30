@@ -28,7 +28,7 @@ def get_id(data, word2id, id2word):
 def word2vec(vocab, dim):
     word_vec = xavier_uniform_(torch.empty(len(vocab), dim))
     num_of_word = 0
-    with open("../data/glove.6B.50d.txt", encoding='utf-8') as f:
+    with open("../data/glove.6B.200d.txt", encoding='utf-8') as f:
         while True:
             line = f.readline()
             if not line:
@@ -55,7 +55,7 @@ def split(X, Y):
 def make_data(X):
     word2id, id2word = build_vocab(X)
     X = get_id(X, word2id, id2word)
-    vec = word2vec(word2id, 50)
+    vec = word2vec(word2id, 200)
     return X, vec, word2id, id2word
 
 class MyDataSet(Data.Dataset):

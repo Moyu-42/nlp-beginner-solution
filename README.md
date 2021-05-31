@@ -1,6 +1,6 @@
 ### NLP-Beginner
 
-This is my solution for the [nlp-beginner]([FudanNLP/nlp-beginner: NLP上手教程 (github.com)](https://github.com/FudanNLP/nlp-beginner))
+This is my solution for the [nlp-beginner](https://github.com/FudanNLP/nlp-beginner)
 
 #### Task 1 Numpy
 

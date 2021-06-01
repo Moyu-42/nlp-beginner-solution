@@ -5,11 +5,11 @@ import numpy as np
 from torch.nn.modules.activation import Tanh
 
 class EmbeddingLayer(nn.Module):
-    def __init__(self, vocab_size, embedding_size):
+    def __init__(self, vocab_size, embedding_size, pretrained=None):
         super(EmbeddingLayer, self).__init__()
         self.embedding_size = embedding_size
         self.vocab_size = vocab_size
-        self.embedding = nn.Embedding(self.vocab_size, self.embedding_size)
+        self.embedding = nn.Embedding(self.vocab_size, self.embedding_size, _weight=pretrained)
         self.dropout = nn.Dropout(0.5)
     
     def forward(self, x):
@@ -23,7 +23,7 @@ class InputEncodingLayer(nn.Module):
         super(InputEncodingLayer, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, bidirectional=True)
+        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, bidirectional=True, batch_first=True)
 
     def forward(self, x):
         x_output, _ = self.lstm(x)
@@ -53,7 +53,7 @@ class InferenceCompositionLayer(nn.Module):
         super(InferenceCompositionLayer, self).__init__()
         self.F = nn.Linear(input_size, output_size)
         self.dropout = nn.Dropout(0.5)
-        self.lstm = nn.LSTM(input_size=output_size, hidden_size=hidden_size, bidirectional=True)
+        self.lstm = nn.LSTM(input_size=output_size, hidden_size=hidden_size, bidirectional=True, batch_first=True)
     
     def forward(self, x):
         # composition layer
@@ -85,9 +85,9 @@ class MLPLayer(nn.Module):
         return logits
 
 class ESIM(nn.Module):
-    def __init__(self, vocab_size, embedding_size, hidden_size, features):
+    def __init__(self, vocab_size, embedding_size, hidden_size, features, pretrained):
         super(ESIM, self).__init__()
-        self.Embedding = EmbeddingLayer(vocab_size, embedding_size)
+        self.Embedding = EmbeddingLayer(vocab_size, embedding_size, pretrained)
         self.Encode = InputEncodingLayer(embedding_size, hidden_size)
         self.LocalInference = LocalInferenceLayer()
         self.InferenceComposition = InferenceCompositionLayer(hidden_size * 8, hidden_size, hidden_size)

@@ -15,6 +15,7 @@ if __name__ == '__main__':
     Y = data['Sentiment'].values
     classes = len(np.unique(Y))
     X, word2vec, word2id, id2word = utils.make_data(X)
+    print(word2vec.shape)
     train_X, train_Y, test_X, test_Y, dev_X, dev_Y = utils.split(X, Y)
     # TODO: split and mini-batch use DataLoader
     train_loader = Data.DataLoader(utils.MyDataSet(train_X, train_Y), 64, True)

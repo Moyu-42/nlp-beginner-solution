@@ -44,7 +44,7 @@ def get_id(data, word2id):
 def word2vec(vocab, dim):
     word_vec = xavier_uniform_(torch.empty(len(vocab), dim))
     num_of_word = 0
-    with open("../data/glove.6B.100d.txt", encoding='utf-8') as f:
+    with open("../data/glove.6B.300d.txt", encoding='utf-8') as f:
         while True:
             line = f.readline()
             if not line:
@@ -70,11 +70,11 @@ def get_DataSet(data_path, word2id, verbose=False):
     vocab = premise + hypothesis
     if verbose:
         word2id, id2word = build_vocab(vocab)
-        w2vec = word2vec(word2id, 100)
+        w2vec = word2vec(word2id, 300)
     premise = get_id(data['sentence1'].values, word2id)
     hypothesis = get_id(data['sentence2'].values, word2id)
     label = [y_dict[lb] for lb in data['gold_label'].values]
     return MyDataSet(premise, hypothesis, label), word2id, w2vec if verbose else torch.empty(len(word2id), 200)
 
 if __name__ == '__main__':
-    test = get_DataSet("../data/snli_1.0/snli_1.0_test.txt", True)
+    test = get_DataSet("../data/snli_1.0/snli_1.0_test.txt", dict, True)

@@ -13,14 +13,14 @@ if __name__ == '__main__':
     test_path = "../data/snli_1.0/snli_1.0_test.txt"
     train_set, word2id, word2vec = utils.get_DataSet(train_path, dict, True)
     test_set, _, _ = utils.get_DataSet(test_path, word2id)
-    train_loader = DataLoader(train_set, 512, True)
-    test_loader = DataLoader(test_set, 512, True)
+    train_loader = DataLoader(train_set, 32, True)
+    test_loader = DataLoader(test_set, 32, True)
 
-    model = ESIM(word2vec.shape[0], word2vec.shape[1], 50, 3, word2vec).cuda()
+    model = ESIM(word2vec.shape[0], word2vec.shape[1], 300, 3, word2vec).cuda()
     print(model)
-    learning_rate = 0.005
+    learning_rate = 0.0004
     epochs = 200
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999))
     criterion = nn.CrossEntropyLoss()
     tqdm_method = trange(epochs)
     for epoch in tqdm_method:
